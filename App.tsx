@@ -23,10 +23,12 @@ const App: React.FC = () => {
 
     const montoBs = usd * tDia;
     const montoBcvUsd = tBcv > 0 ? montoBs / tBcv : 0;
+    const brecha = tBcv > 0 ? ((tDia - tBcv) / tBcv) * 100 : 0;
 
     return {
       montoBolivares: montoBs,
-      montoBcvUsd: montoBcvUsd
+      montoBcvUsd: montoBcvUsd,
+      brecha: brecha
     };
   }, [inputs]);
 
@@ -103,23 +105,38 @@ const App: React.FC = () => {
               suffix="USD"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputGroup 
-                label="Tasa del Día"
-                icon="fa-solid fa-chart-line"
-                placeholder="Ej. 60.50"
-                value={inputs.tasaDia}
-                onChange={(val) => handleInputChange('tasaDia', val)}
-                suffix="Bs/$"
-              />
-              <InputGroup 
-                label="Tasa BCV"
-                icon="fa-solid fa-building-columns"
-                placeholder="Ej. 54.20"
-                value={inputs.tasaBcv}
-                onChange={(val) => handleInputChange('tasaBcv', val)}
-                suffix="Bs/$"
-              />
+            <div className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InputGroup 
+                  label="Tasa del Día"
+                  icon="fa-solid fa-chart-line"
+                  placeholder="Ej. 60.50"
+                  value={inputs.tasaDia}
+                  onChange={(val) => handleInputChange('tasaDia', val)}
+                  suffix="Bs/$"
+                />
+                <InputGroup 
+                  label="Tasa BCV"
+                  icon="fa-solid fa-building-columns"
+                  placeholder="Ej. 54.20"
+                  value={inputs.tasaBcv}
+                  onChange={(val) => handleInputChange('tasaBcv', val)}
+                  suffix="Bs/$"
+                />
+              </div>
+              
+              {/* Sutil Brecha Cambiaria */}
+              {results.brecha !== 0 && (
+                <div className="flex justify-center -mt-2 mb-4">
+                  <div className="bg-slate-100 px-3 py-1 rounded-full border border-slate-200 flex items-center gap-2 animate-fade-in">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Brecha Cambiaria:</span>
+                    <span className={`text-xs font-bold ${results.brecha > 15 ? 'text-red-500' : 'text-amber-600'}`}>
+                      {results.brecha.toFixed(2)}%
+                    </span>
+                    <i className={`fa-solid ${results.brecha > 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'} text-[10px] opacity-50`}></i>
+                  </div>
+                </div>
+              )}
             </div>
 
             <button
