@@ -1,0 +1,5 @@
+{
+  "name": "Calculadora de Divisas Inteligente",
+  "description": "Una calculadora avanzada para convertir precios en dólares a bolívares usando la tasa del día y calcular el equivalente en dólares BCV. Incluye integración con Gemini para sugerencias de tasas en tiempo real.",
+  "requestFramePermissions": []
+}
