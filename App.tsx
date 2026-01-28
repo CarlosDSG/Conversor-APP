@@ -1,9 +1,8 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import InputGroup from './components/InputGroup';
 import ResultCard from './components/ResultCard';
-import { getLatestRates } from './services/geminiService';
-import { CalculationInputs, GroundingSource } from './types';
+import { CalculationInputs } from './types';
 
 const App: React.FC = () => {
   const [inputs, setInputs] = useState<CalculationInputs>({
@@ -11,10 +10,6 @@ const App: React.FC = () => {
     tasaDia: '',
     tasaBcv: ''
   });
-  
-  const [isLoadingRates, setIsLoadingRates] = useState(false);
-  const [sources, setSources] = useState<GroundingSource[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
   const results = useMemo(() => {
     const usd = parseFloat(inputs.precioUsd) || 0;
@@ -32,32 +27,6 @@ const App: React.FC = () => {
     };
   }, [inputs]);
 
-  const handleFetchRates = async () => {
-    setIsLoadingRates(true);
-    setError(null);
-    try {
-      const data = await getLatestRates();
-      setInputs(prev => ({
-        ...prev,
-        tasaDia: data.tasaDia.toString(),
-        tasaBcv: data.tasaBcv.toString()
-      }));
-      // Clean and set sources
-      const mappedSources: GroundingSource[] = data.sources
-        .filter((c: any) => c.web)
-        .map((c: any) => ({
-          title: c.web.title || 'Fuente de información',
-          uri: c.web.uri
-        }));
-      setSources(mappedSources);
-    } catch (err) {
-      setError("No se pudieron obtener las tasas automáticamente. Por favor, ingrésalas manualmente.");
-      console.error(err);
-    } finally {
-      setIsLoadingRates(false);
-    }
-  };
-
   const handleInputChange = (field: keyof CalculationInputs, value: string) => {
     setInputs(prev => ({ ...prev, [field]: value }));
   };
@@ -68,8 +37,6 @@ const App: React.FC = () => {
       tasaDia: '',
       tasaBcv: ''
     });
-    setSources([]);
-    setError(null);
   };
 
   return (
@@ -82,7 +49,7 @@ const App: React.FC = () => {
             <div>
               <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
                 <i className="fa-solid fa-calculator text-blue-600"></i>
-                Calculadora Inteligente
+                Calculadora de Divisas
               </h1>
               <p className="text-slate-500 text-sm mt-1">Conversión precisa y rápida</p>
             </div>
@@ -138,35 +105,6 @@ const App: React.FC = () => {
                 </div>
               )}
             </div>
-
-            <button
-              onClick={handleFetchRates}
-              disabled={isLoadingRates}
-              className={`w-full py-3 px-4 rounded-xl flex items-center justify-center gap-3 font-bold transition-all ${
-                isLoadingRates 
-                ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200 active:scale-[0.98]'
-              }`}
-            >
-              {isLoadingRates ? (
-                <>
-                  <i className="fa-solid fa-spinner fa-spin"></i>
-                  Buscando tasas actuales...
-                </>
-              ) : (
-                <>
-                  <i className="fa-solid fa-wand-magic-sparkles"></i>
-                  Obtener tasas con IA (Gemini)
-                </>
-              )}
-            </button>
-
-            {error && (
-              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg text-sm flex items-start gap-2">
-                <i className="fa-solid fa-circle-exclamation mt-0.5"></i>
-                {error}
-              </div>
-            )}
           </div>
         </div>
 
@@ -188,31 +126,6 @@ const App: React.FC = () => {
             description="Cálculo: (Monto en Bs) ÷ Tasa BCV"
           />
 
-          {/* Grounding Sources Panel */}
-          {sources.length > 0 && (
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <i className="fa-solid fa-magnifying-glass text-blue-500"></i>
-                Fuentes Consultadas
-              </h4>
-              <ul className="space-y-3">
-                {sources.slice(0, 3).map((source, idx) => (
-                  <li key={idx} className="group">
-                    <a 
-                      href={source.uri} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm font-medium text-slate-600 group-hover:text-blue-600 flex items-start gap-2 transition-colors"
-                    >
-                      <i className="fa-solid fa-link mt-1 text-[10px] text-slate-300 group-hover:text-blue-400"></i>
-                      <span className="line-clamp-2">{source.title}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           {/* Info Card */}
           <div className="bg-slate-800 text-slate-300 p-6 rounded-3xl shadow-lg">
             <div className="flex items-center gap-3 mb-4">
@@ -222,8 +135,7 @@ const App: React.FC = () => {
                <h4 className="font-bold text-white">Guía de Uso</h4>
             </div>
             <p className="text-sm leading-relaxed">
-              Esta herramienta permite estimar cuánto debes cobrar o pagar basándote en la diferencia entre el mercado paralelo y el oficial. 
-              Utiliza el botón de <span className="text-blue-400 font-bold underline">Gemini</span> para consultar la web y rellenar las tasas del momento automáticamente.
+              Esta herramienta permite estimar cuánto debes cobrar o pagar basándote en la diferencia entre el mercado paralelo y el oficial. Ingresa manualmente el precio y las tasas vigentes para obtener los resultados al instante.
             </p>
           </div>
         </div>
@@ -232,7 +144,7 @@ const App: React.FC = () => {
       
       {/* Sticky footer for mobile */}
       <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-200 p-3 text-center text-xs text-slate-400 lg:hidden">
-        Calculadora de Divisas v1.0 • Impulsado por Gemini 3
+        Calculadora de Divisas v1.1
       </footer>
     </div>
   );
